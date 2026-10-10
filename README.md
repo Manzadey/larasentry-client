@@ -28,7 +28,7 @@ Add the following variables to your `.env` file:
 
 ```env
 # The URL of your Go-based Larasentry Server
-LARASENTRY_URL=http://your-server.com/api/events
+LARASENTRY_URL=http://your-server.com
 
 # The unique API key generated for this project
 LARASENTRY_API_KEY=your-project-api-key

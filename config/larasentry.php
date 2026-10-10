@@ -9,7 +9,7 @@ return [
     | The endpoint where the exceptions will be sent.
     |
     */
-    'url' => env('LARASENTRY_URL', 'http://localhost:8080/api/events'),
+    'url' => env('LARASENTRY_URL', 'http://localhost:8080'),
 
     /*
     |--------------------------------------------------------------------------

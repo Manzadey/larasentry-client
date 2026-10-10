@@ -19,6 +19,8 @@ class Larasentry
             // Larasentry is not configured, do nothing
             return;
         }
+        
+        $url = rtrim($url, '/') . '/api/events';
 
         $request = request();
 
