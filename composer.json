@@ -1,0 +1,27 @@
+{
+    "name": "manzadey/larasentry-client",
+    "description": "A lightweight exception tracker client for Laravel.",
+    "type": "library",
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/http": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Manzadey\\Larasentry\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Manzadey\\Larasentry\\LarasentryServiceProvider"
+            ],
+            "aliases": {
+                "Larasentry": "Manzadey\\Larasentry\\Facades\\Larasentry"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
