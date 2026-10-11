@@ -5,6 +5,11 @@ Designed to be used with the **Larasentry Server** (a Go-based microservice) to 
 
 ## Features
 - Fully asynchronous (does not slow down your app)
+- Automatically collects runtime & environment context:
+  - `php_version` (e.g. `8.2.18` via `PHP_VERSION`)
+  - `environment` (e.g. `production` / `staging`)
+  - `release` (application version or Git commit tag)
+  - `tags` with `laravel_version` and `php_os`
 - Automatically ignores 4xx HTTP errors, Validation and Authentication exceptions
 - Hooks directly into Laravel's Exception Handler
 
@@ -32,6 +37,9 @@ LARASENTRY_URL=http://your-server.com
 
 # The unique API key generated for this project
 LARASENTRY_API_KEY=your-project-api-key
+
+# Optional: application version / release tag
+APP_VERSION=1.0.0
 ```
 
 ## Usage

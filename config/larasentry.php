@@ -30,4 +30,29 @@ return [
     |
     */
     'app_url' => env('APP_URL', 'http://localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Release / Version
+    |--------------------------------------------------------------------------
+    |
+    | The current version or release tag of your application.
+    | If null, the client falls back to config('app.version').
+    |
+    */
+    'release' => env('APP_VERSION', null),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Tags
+    |--------------------------------------------------------------------------
+    |
+    | Additional tags to send with every captured exception.
+    | System tags (`laravel_version` and `php_os`) are attached automatically.
+    |
+    */
+    'tags' => [
+        // 'server_type' => 'worker',
+    ],
 ];
+
