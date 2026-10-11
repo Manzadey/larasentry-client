@@ -8,7 +8,7 @@ return [
     */
     'server_url' => env('LARASENTRY_SERVER_URL', env('LARASENTRY_URL', 'http://127.0.0.1:8080')),
     'url'        => env('LARASENTRY_URL', env('LARASENTRY_SERVER_URL', 'http://127.0.0.1:8080')),
-    'project'    => env('LARASENTRY_PROJECT', env('APP_NAME', 'laravel')),
+    'project'    => env('LARASENTRY_PROJECT', null),
     'api_key'    => env('LARASENTRY_API_KEY', null),
     'timeout'    => env('LARASENTRY_TIMEOUT', 2), // секунды на HTTP запрос
 

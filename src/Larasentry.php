@@ -66,7 +66,7 @@ class Larasentry
         $request = (!$isConsole && function_exists('request')) ? request() : null;
 
         $payload = [
-            'project'         => $this->getConfig('larasentry.project') ?? (function_exists('config') ? config('app.name') : 'laravel'),
+            'project'         => $this->getConfig('larasentry.project') ?: $this->getConfig('app.name') ?: 'laravel',
             'exception_class' => get_class($exception),
             'message'         => $exception->getMessage(),
             'file'            => $exception->getFile(),
@@ -152,8 +152,9 @@ class Larasentry
                 $headers['Authorization'] = 'Bearer ' . $actualApiKey;
             }
 
-            if (!empty($actualPayload['project'])) {
-                $headers['X-Project'] = (string)$actualPayload['project'];
+            $project = $actualPayload['project'] ?? ($this->getConfig('larasentry.project') ?: $this->getConfig('app.name') ?: 'laravel');
+            if (!empty($project)) {
+                $headers['X-Project'] = (string)$project;
             }
 
             Http::withHeaders($headers)
