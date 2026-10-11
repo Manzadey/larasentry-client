@@ -27,8 +27,8 @@ class SendLarasentryReportJob implements ShouldQueue
      */
     public function __construct(
         public string $url,
-        public string $apiKey,
-        public array $payload
+        public ?string $apiKey = null,
+        public array $payload = []
     ) {}
 
     /**

@@ -23,27 +23,27 @@ class Larasentry
         try {
             $payload = $this->buildPayload($exception);
 
-            $queue = config('larasentry.queue');
+            $queue = $this->getConfig('larasentry.queue');
             if (!empty($queue)) {
-                $serverUrl = config('larasentry.server_url') ?? config('larasentry.url') ?? 'http://127.0.0.1:8080';
+                $serverUrl = $this->getConfig('larasentry.server_url') ?? $this->getConfig('larasentry.url') ?? 'http://127.0.0.1:8080';
                 $url = rtrim((string)$serverUrl, '/') . '/api/events';
-                $apiKey = (string)(config('larasentry.api_key') ?? '');
+                $apiKey = $this->getConfig('larasentry.api_key');
 
-                if (!empty($url) && !empty($apiKey)) {
+                if (!empty($url)) {
                     $job = new SendLarasentryReportJob($url, $apiKey, $payload);
 
                     if (is_string($queue) && $queue !== 'true') {
                         $job->onQueue($queue);
                     }
 
-                    $connection = config('larasentry.queue_connection');
+                    $connection = $this->getConfig('larasentry.queue_connection');
                     if (!empty($connection)) {
                         $job->onConnection($connection);
                     }
 
                     if (function_exists('dispatch')) {
                         dispatch($job);
-                    } else {
+                    } elseif (function_exists('app')) {
                         app(\Illuminate\Contracts\Bus\Dispatcher::class)->dispatch($job);
                     }
 
@@ -66,27 +66,28 @@ class Larasentry
         $request = (!$isConsole && function_exists('request')) ? request() : null;
 
         $payload = [
+            'project'         => $this->getConfig('larasentry.project') ?? (function_exists('config') ? config('app.name') : 'laravel'),
             'exception_class' => get_class($exception),
             'message'         => $exception->getMessage(),
             'file'            => $exception->getFile(),
             'line'            => $exception->getLine(),
             'stack_trace'     => $exception->getTraceAsString(),
-            'release'         => config('larasentry.release') ?? config('app.version') ?? '1.0.0',
-            'environment'     => config('larasentry.environment') ?? (function_exists('app') ? app()->environment() : 'production'),
+            'release'         => $this->getConfig('larasentry.release') ?? $this->getConfig('app.version') ?? '1.0.0',
+            'environment'     => $this->getConfig('larasentry.environment') ?? (function_exists('app') ? app()->environment() : 'production'),
             'php_version'     => PHP_VERSION,
             'laravel_version' => function_exists('app') ? app()->version() : '',
-            'app_url'         => config('larasentry.app_url') ?? config('app.url') ?? '',
+            'app_url'         => $this->getConfig('larasentry.app_url') ?? $this->getConfig('app.url') ?? '',
             'request_url'     => $request ? $request->fullUrl() : '',
             'request_method'  => $request ? $request->method() : 'CLI',
         ];
 
-        $tags = config('larasentry.tags');
+        $tags = $this->getConfig('larasentry.tags');
         if (!empty($tags) && is_array($tags)) {
             $payload['tags'] = $tags;
         }
 
         // 1. Code snippet (если включен)
-        if (config('larasentry.send_code_snippet', true)) {
+        if ($this->getConfig('larasentry.send_code_snippet', true)) {
             $snippet = $this->extractCodeSnippet($exception->getFile(), $exception->getLine());
             if ($snippet !== null) {
                 $payload['code_snippet'] = $snippet;
@@ -94,25 +95,25 @@ class Larasentry
         }
 
         // 2. Route & HTTP Request Context
-        if (config('larasentry.collect_route', true)) {
+        if ($this->getConfig('larasentry.collect_route', true)) {
             $payload['route'] = RequestContext::captureRoute();
         }
-        if (config('larasentry.collect_request', true)) {
+        if ($this->getConfig('larasentry.collect_request', true)) {
             $payload['http_request'] = RequestContext::captureRequest();
         }
 
         // 3. Execution Context (Queue / Console / HTTP)
-        if (config('larasentry.collect_queue', true)) {
+        if ($this->getConfig('larasentry.collect_queue', true)) {
             $payload['execution'] = QueueContext::captureExecution();
         }
 
         // 4. Breadcrumbs
-        if (config('larasentry.collect_breadcrumbs', true)) {
+        if ($this->getConfig('larasentry.collect_breadcrumbs', true)) {
             $payload['breadcrumbs'] = BreadcrumbRecorder::getInstance()->toArray();
         }
 
         // 5. System Resources Context
-        if (config('larasentry.collect_system', true)) {
+        if ($this->getConfig('larasentry.collect_system', true)) {
             $payload['system'] = SystemContext::capture();
         }
 
@@ -127,29 +128,38 @@ class Larasentry
         try {
             if (is_array($payloadOrUrl)) {
                 $actualPayload = $payloadOrUrl;
-                $serverUrl = config('larasentry.server_url') ?? config('larasentry.url') ?? 'http://127.0.0.1:8080';
+                $serverUrl = $this->getConfig('larasentry.server_url') ?? $this->getConfig('larasentry.url') ?? 'http://127.0.0.1:8080';
                 $actualUrl = rtrim((string)$serverUrl, '/') . '/api/events';
-                $actualApiKey = (string)(config('larasentry.api_key') ?? '');
+                $actualApiKey = (string)($this->getConfig('larasentry.api_key') ?? '');
             } else {
                 $actualUrl = $payloadOrUrl;
-                $actualApiKey = $apiKey ?? (string)(config('larasentry.api_key') ?? '');
+                $actualApiKey = $apiKey ?? (string)($this->getConfig('larasentry.api_key') ?? '');
                 $actualPayload = $payload ?? [];
             }
 
-            if (empty($actualUrl) || empty($actualApiKey)) {
+            if (empty($actualUrl)) {
                 return;
             }
 
-            $timeout = (int)config('larasentry.timeout', 2);
+            $timeout = (int)$this->getConfig('larasentry.timeout', 2);
 
-            Http::withHeaders([
-                'Authorization' => 'Bearer ' . $actualApiKey,
-                'Accept'        => 'application/json',
-                'Content-Type'  => 'application/json',
-            ])
-            ->connectTimeout(1)
-            ->timeout($timeout)
-            ->post($actualUrl, $actualPayload);
+            $headers = [
+                'Accept'       => 'application/json',
+                'Content-Type' => 'application/json',
+            ];
+
+            if (!empty($actualApiKey)) {
+                $headers['Authorization'] = 'Bearer ' . $actualApiKey;
+            }
+
+            if (!empty($actualPayload['project'])) {
+                $headers['X-Project'] = (string)$actualPayload['project'];
+            }
+
+            Http::withHeaders($headers)
+                ->connectTimeout(1)
+                ->timeout($timeout)
+                ->post($actualUrl, $actualPayload);
         } catch (Throwable) {
             // Тихий сбой, никогда не ломаем клиентское приложение
         }
@@ -165,7 +175,7 @@ class Larasentry
                 return null;
             }
 
-            $totalLines = (int)config('larasentry.snippet_lines', 9);
+            $totalLines = (int)$this->getConfig('larasentry.snippet_lines', 9);
             $half = (int)floor($totalLines / 2);
 
             $start = max(1, $line - $half);
@@ -196,5 +206,13 @@ class Larasentry
         } catch (Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Safe config retriever fallback.
+     */
+    protected function getConfig(string $key, mixed $default = null): mixed
+    {
+        return function_exists('config') ? config($key, $default) : $default;
     }
 }

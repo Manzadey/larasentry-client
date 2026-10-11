@@ -36,8 +36,11 @@ Add the following variables to your `.env` file:
 # The URL of your Go-based Larasentry Server
 LARASENTRY_URL=http://your-server.com
 
-# The unique API key generated for this project
-LARASENTRY_API_KEY=your-project-api-key
+# Optional: project identifier (defaults to APP_NAME)
+LARASENTRY_PROJECT=my-app
+
+# Optional: API key (only if your server has API key auth configured)
+# LARASENTRY_API_KEY=your-project-api-key
 
 # Optional: queue name for background processing (e.g. default, sentry)
 # If omitted or empty, exceptions are sent synchronously
