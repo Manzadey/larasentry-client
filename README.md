@@ -5,6 +5,7 @@ Designed to be used with the **Larasentry Server** (a Go-based microservice) to 
 
 ## Features
 - Lightweight and failsafe (2s timeout, 1s connect timeout)
+- Optional background delivery via Laravel Queue (e.g. `default`, `sentry`)
 - Automatically collects runtime & environment context:
   - `php_version` (e.g. `8.2.18` via `PHP_VERSION`)
   - `environment` (e.g. `production` / `staging`)
@@ -37,6 +38,13 @@ LARASENTRY_URL=http://your-server.com
 
 # The unique API key generated for this project
 LARASENTRY_API_KEY=your-project-api-key
+
+# Optional: queue name for background processing (e.g. default, sentry)
+# If omitted or empty, exceptions are sent synchronously
+LARASENTRY_QUEUE=default
+
+# Optional: queue connection (e.g. redis, database)
+LARASENTRY_QUEUE_CONNECTION=redis
 
 # Optional: application version / release tag
 APP_VERSION=1.0.0
