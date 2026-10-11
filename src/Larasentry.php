@@ -8,7 +8,7 @@ use Throwable;
 class Larasentry
 {
     /**
-     * Capture an exception and send it to the Larasentry server asynchronously.
+     * Capture an exception and send it to the Larasentry server.
      */
     public function captureException(Throwable $exception): void
     {
@@ -25,13 +25,12 @@ class Larasentry
         $payload = $this->buildPayload($exception);
 
         try {
-            // Отправляем асинхронно, чтобы не тормозить отдачу страницы пользователю
             Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type'  => 'application/json',
             ])
+            ->connectTimeout(1)
             ->timeout(2)
-            ->async()
             ->post($url, $payload);
         } catch (Throwable $e) {
             // Failsafe

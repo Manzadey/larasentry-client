@@ -4,7 +4,7 @@ A lightweight exception tracker client for Laravel.
 Designed to be used with the **Larasentry Server** (a Go-based microservice) to collect exceptions and send aggregated reports to Telegram.
 
 ## Features
-- Fully asynchronous (does not slow down your app)
+- Lightweight and failsafe (2s timeout, 1s connect timeout)
 - Automatically collects runtime & environment context:
   - `php_version` (e.g. `8.2.18` via `PHP_VERSION`)
   - `environment` (e.g. `production` / `staging`)
