@@ -53,6 +53,10 @@ LARASENTRY_QUEUE_CONNECTION=redis
 APP_VERSION=1.0.0
 ```
 
+### Server address
+
+The address is read from `larasentry.url` (`LARASENTRY_URL`). `larasentry.server_url` (`LARASENTRY_SERVER_URL`) is an alias kept for backward compatibility: `url` wins when both are set to different values. If the address is empty, nothing is sent.
+
 ## Usage
 
 Once installed and configured, the package automatically captures unhandled `500+` exceptions and sends them to your tracker. No manual code changes are required.

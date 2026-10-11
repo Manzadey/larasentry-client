@@ -21,12 +21,16 @@ class Larasentry
     public function captureException(Throwable $exception): void
     {
         try {
+            $serverUrl = $this->resolveServerUrl();
+            if ($serverUrl === '') {
+                return;
+            }
+
             $payload = $this->buildPayload($exception);
 
             $queue = $this->getConfig('larasentry.queue');
             if (!empty($queue)) {
-                $serverUrl = $this->getConfig('larasentry.server_url') ?? $this->getConfig('larasentry.url') ?? 'http://127.0.0.1:8080';
-                $url = rtrim((string)$serverUrl, '/') . '/api/events';
+                $url = $serverUrl . '/api/events';
                 $apiKey = $this->getConfig('larasentry.api_key');
 
                 if (!empty($url)) {
@@ -127,9 +131,13 @@ class Larasentry
     {
         try {
             if (is_array($payloadOrUrl)) {
+                $serverUrl = $this->resolveServerUrl();
+                if ($serverUrl === '') {
+                    return;
+                }
+
                 $actualPayload = $payloadOrUrl;
-                $serverUrl = $this->getConfig('larasentry.server_url') ?? $this->getConfig('larasentry.url') ?? 'http://127.0.0.1:8080';
-                $actualUrl = rtrim((string)$serverUrl, '/') . '/api/events';
+                $actualUrl = $serverUrl . '/api/events';
                 $actualApiKey = (string)($this->getConfig('larasentry.api_key') ?? '');
             } else {
                 $actualUrl = $payloadOrUrl;
@@ -207,6 +215,32 @@ class Larasentry
         } catch (Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Адрес сервера без завершающего слэша; пустая строка — клиент не настроен.
+     */
+    protected function resolveServerUrl(): string
+    {
+        // Дефолт из config/larasentry.php считается «не задано»: в опубликованных конфигах
+        // оба ключа всегда заполнены, и иначе явно заданный один из них проигрывал бы дефолту другого
+        $default = 'http://127.0.0.1:8080';
+
+        $values = [];
+        foreach (['larasentry.url', 'larasentry.server_url'] as $key) {
+            $value = $this->getConfig($key);
+            if ($value !== null) {
+                $values[] = trim((string)$value);
+            }
+        }
+
+        foreach ($values as $value) {
+            if ($value !== '' && $value !== $default) {
+                return rtrim($value, '/');
+            }
+        }
+
+        return in_array('', $values, true) ? '' : rtrim($values[0] ?? '', '/');
     }
 
     /**
