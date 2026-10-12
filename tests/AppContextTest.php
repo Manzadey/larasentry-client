@@ -95,6 +95,24 @@ class AppContextTest extends TestCase
         $this->assertNotFalse(json_encode($payload));
     }
 
+    public function test_failing_sanitizer_drops_block_but_keeps_event(): void
+    {
+        Context::add('trace_id', 't-1');
+
+        $payload = $this->payload(new ContextAwareException(['o' => new ThrowingStringable()]));
+
+        $this->assertSame(['trace_id' => 't-1'], $payload['context']['shared']);
+        $this->assertArrayNotHasKey('exception', $payload['context']);
+    }
+
+    public function test_empty_max_bytes_falls_back_to_default(): void
+    {
+        config(['larasentry.max_context_bytes' => '']);
+        Context::add('trace_id', 't-1');
+
+        $this->assertSame(['trace_id' => 't-1'], $this->payload(new RuntimeException('boom'))['context']['shared']);
+    }
+
     public function test_collect_context_flag_disables_block(): void
     {
         config(['larasentry.collect_context' => false]);
@@ -130,5 +148,13 @@ class StringContextException extends Exception
     public function context(): string
     {
         return 'not an array';
+    }
+}
+
+class ThrowingStringable
+{
+    public function __toString(): string
+    {
+        throw new RuntimeException('__toString() is broken');
     }
 }

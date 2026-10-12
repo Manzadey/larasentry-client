@@ -23,8 +23,14 @@ class AppContext
 
         $result = [];
         foreach ($blocks as $name => $data) {
-            if ($data !== []) {
+            if ($data === []) {
+                continue;
+            }
+
+            try {
                 $result[$name] = self::prepare($data);
+            } catch (Throwable) {
+                // Sanitizer вызывает __toString()/getKey() на пользовательских объектах — их сбой не должен терять событие
             }
         }
 
@@ -69,6 +75,10 @@ class AppContext
         }
 
         $maxBytes = function_exists('config') ? (int)config('larasentry.max_context_bytes', 16384) : 16384;
+        // Пустой или нечисловой env даёт 0, и тогда обрезался бы каждый блок
+        if ($maxBytes <= 0) {
+            $maxBytes = 16384;
+        }
         if (strlen($json) > $maxBytes) {
             return ['_truncated' => true, '_size' => strlen($json)];
         }
