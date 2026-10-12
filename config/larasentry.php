@@ -48,6 +48,9 @@ return [
     'collect_queue'       => env('LARASENTRY_COLLECT_QUEUE', true),
     'collect_system'      => env('LARASENTRY_COLLECT_SYSTEM', true),
 
+    'collect_context'   => env('LARASENTRY_COLLECT_CONTEXT', true),
+    'max_context_bytes' => env('LARASENTRY_MAX_CONTEXT_BYTES', 16384),
+
     /*
     |--------------------------------------------------------------------------
     | PII & Data Scrubbing
