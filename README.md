@@ -49,6 +49,13 @@ LARASENTRY_QUEUE=default
 # Optional: queue connection (e.g. redis, database)
 LARASENTRY_QUEUE_CONNECTION=redis
 
+# Optional: send Laravel Context (Context::add) and Exception::context() with each event.
+# Hidden context (Context::addHidden) is never sent. Keys from scrub_fields are masked.
+LARASENTRY_COLLECT_CONTEXT=true
+
+# Optional: max size of each context block in bytes; larger blocks are replaced with a marker
+LARASENTRY_MAX_CONTEXT_BYTES=16384
+
 # Optional: application version / release tag
 APP_VERSION=1.0.0
 ```

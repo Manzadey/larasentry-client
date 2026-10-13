@@ -7,6 +7,7 @@ namespace Manzadey\Larasentry;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Manzadey\Larasentry\Breadcrumbs\BreadcrumbRecorder;
+use Manzadey\Larasentry\Context\AppContext;
 use Manzadey\Larasentry\Context\QueueContext;
 use Manzadey\Larasentry\Context\RequestContext;
 use Manzadey\Larasentry\Context\SystemContext;
@@ -116,6 +117,13 @@ class Larasentry
         // 4. Breadcrumbs
         if ($this->getConfig('larasentry.collect_breadcrumbs', true)) {
             $payload['breadcrumbs'] = BreadcrumbRecorder::getInstance()->toArray();
+        }
+
+        if ($this->getConfig('larasentry.collect_context', true)) {
+            $context = AppContext::capture($exception);
+            if ($context !== []) {
+                $payload['context'] = $context;
+            }
         }
 
         // 5. System Resources Context
