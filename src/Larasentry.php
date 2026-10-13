@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Manzadey\Larasentry;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Manzadey\Larasentry\Breadcrumbs\BreadcrumbRecorder;
 use Manzadey\Larasentry\Context\QueueContext;
 use Manzadey\Larasentry\Context\RequestContext;
 use Manzadey\Larasentry\Context\SystemContext;
 use Manzadey\Larasentry\Jobs\SendLarasentryReportJob;
+use RuntimeException;
 use SplFileObject;
 use Throwable;
 
@@ -131,47 +133,68 @@ class Larasentry
     {
         try {
             if (is_array($payloadOrUrl)) {
-                $serverUrl = $this->resolveServerUrl();
-                if ($serverUrl === '') {
-                    return;
-                }
+                $this->send($payloadOrUrl);
 
-                $actualPayload = $payloadOrUrl;
-                $actualUrl = $serverUrl . '/api/events';
-                $actualApiKey = (string)($this->getConfig('larasentry.api_key') ?? '');
-            } else {
-                $actualUrl = $payloadOrUrl;
-                $actualApiKey = $apiKey ?? (string)($this->getConfig('larasentry.api_key') ?? '');
-                $actualPayload = $payload ?? [];
-            }
-
-            if (empty($actualUrl)) {
                 return;
             }
 
-            $timeout = (int)$this->getConfig('larasentry.timeout', 2);
-
-            $headers = [
-                'Accept'       => 'application/json',
-                'Content-Type' => 'application/json',
-            ];
-
-            if (!empty($actualApiKey)) {
-                $headers['Authorization'] = 'Bearer ' . $actualApiKey;
+            if ($payloadOrUrl === '') {
+                return;
             }
 
-            $project = $actualPayload['project'] ?? ($this->getConfig('larasentry.project') ?: $this->getConfig('app.name') ?: 'laravel');
-            if (!empty($project)) {
-                $headers['X-Project'] = (string)$project;
-            }
-
-            Http::withHeaders($headers)
-                ->connectTimeout(1)
-                ->timeout($timeout)
-                ->post($actualUrl, $actualPayload);
+            $this->post(
+                $payloadOrUrl,
+                $apiKey ?? (string)($this->getConfig('larasentry.api_key') ?? ''),
+                $payload ?? []
+            );
         } catch (Throwable) {
             // Тихий сбой, никогда не ломаем клиентское приложение
         }
+    }
+
+    /**
+     * Синхронная отправка без глушения ошибок — для larasentry:test, где сбой нужно показать.
+     *
+     * @param array<string, mixed> $payload
+     * @throws RuntimeException если адрес сервера не задан
+     */
+    public function send(array $payload): Response
+    {
+        $serverUrl = $this->resolveServerUrl();
+        if ($serverUrl === '') {
+            throw new RuntimeException('Larasentry server URL is not configured (LARASENTRY_URL).');
+        }
+
+        return $this->post(
+            $serverUrl . '/api/events',
+            (string)($this->getConfig('larasentry.api_key') ?? ''),
+            $payload
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    protected function post(string $url, string $apiKey, array $payload): Response
+    {
+        $headers = [
+            'Accept'       => 'application/json',
+            'Content-Type' => 'application/json',
+        ];
+
+        if ($apiKey !== '') {
+            $headers['Authorization'] = 'Bearer ' . $apiKey;
+        }
+
+        $project = $payload['project'] ?? ($this->getConfig('larasentry.project') ?: $this->getConfig('app.name') ?: 'laravel');
+        if (!empty($project)) {
+            $headers['X-Project'] = (string)$project;
+        }
+
+        return Http::withHeaders($headers)
+            ->connectTimeout(1)
+            ->timeout((int)$this->getConfig('larasentry.timeout', 2))
+            ->post($url, $payload);
     }
 
     /**
