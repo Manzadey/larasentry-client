@@ -61,10 +61,13 @@ The address is read from `larasentry.url` (`LARASENTRY_URL`). `larasentry.server
 
 Once installed and configured, the package automatically captures unhandled `500+` exceptions and sends them to your tracker. No manual code changes are required.
 
-To test if it works, you can run:
+To test if it works, send a test incident:
 ```bash
-php artisan tinker --execute="app(\Illuminate\Contracts\Debug\ExceptionHandler::class)->report(new Exception('Test Exception'));"
+php artisan larasentry:test
+php artisan larasentry:test --message="Hello from production"
 ```
+
+The command sends synchronously (ignoring `LARASENTRY_QUEUE`) and exits with a non-zero code if the server URL is missing, the server is unreachable, or it responds with an error status.
 
 ## License
 

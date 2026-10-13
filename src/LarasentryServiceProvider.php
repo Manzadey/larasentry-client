@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Manzadey\Larasentry\Breadcrumbs\Breadcrumb;
 use Manzadey\Larasentry\Breadcrumbs\BreadcrumbRecorder;
+use Manzadey\Larasentry\Console\TestCommand;
 use Manzadey\Larasentry\Context\QueueContext;
 use Manzadey\Larasentry\Jobs\SendLarasentryReportJob;
 use Monolog\Handler\AbstractProcessingHandler;
@@ -39,6 +40,8 @@ class LarasentryServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__ . '/../config/larasentry.php' => config_path('larasentry.php'),
             ], 'larasentry-config');
+
+            $this->commands([TestCommand::class]);
         }
 
         // Автоматическая регистрация перехватчика ошибок
